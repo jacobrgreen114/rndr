@@ -1,3 +1,6 @@
+# Copyright (C) 2022-2023 Jacob R. Green
+# All Rights Reserved.
+
 
 add_library(rndr
         src/Rndr.cpp
