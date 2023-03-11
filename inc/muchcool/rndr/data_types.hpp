@@ -1,9 +1,12 @@
 
+// Copyright (c) 2023 Jacob R. Green
+// All Rights Reserved.
+
 #pragma once
 
-#include "Platform.hpp"
+#include "common.hpp"
 
-namespace rndr {
+namespace muchcool::rndr {
 using Vec = glm::vec1;
 using Vec2 = glm::vec2;
 using Vec3 = glm::vec3;
@@ -22,4 +25,4 @@ using i32Vec = glm::ivec1;
 using i32Vec2 = glm::ivec2;
 using i32Vec3 = glm::ivec3;
 using i32Vec4 = glm::ivec4;
-} // namespace Rndr
+}  // namespace muchcool::rndr

@@ -1,37 +1,37 @@
 
-// Copyright (c) 2022-2023 Jacob R. Green
+// Copyright (c) 2023 Jacob R. Green
 // All Rights Reserved.
 
-#include "muchcool/rndr/Pipeline.hpp"
+#include "muchcool/rndr/pipeline.hpp"
 
-namespace rndr {
+namespace muchcool::rndr {
 
 /*
  * Pipeline Layout
  */
 
-vk::DescriptorSetLayout
-ToVulkanType(const Pointer<DescriptorSetLayout> &layout) {
+vk::DescriptorSetLayout ToVulkanType(
+    const Shared<DescriptorSetLayout>& layout) {
   return *layout;
 }
 
 std::vector<vk::DescriptorSetLayout> ToVulkanType(
-    const ArrayProxy<const Pointer<DescriptorSetLayout>> &descriptorSets) {
+    const ArrayProxy<const Shared<DescriptorSetLayout>>& descriptorSets) {
   auto descriptorHandles =
       std::vector<vk::DescriptorSetLayout>(descriptorSets.size());
   std::transform(descriptorSets.begin(), descriptorSets.end(),
                  descriptorHandles.begin(),
-                 [](auto &pDescriptor) { return ToVulkanType(pDescriptor); });
+                 [](auto& pDescriptor) { return ToVulkanType(pDescriptor); });
   return descriptorHandles;
 }
 
 PipelineLayout::PipelineLayout(
-    GraphicsContext *context,
-    ArrayProxy<const Pointer<DescriptorSetLayout>> descriptorSets,
+    Shared<GraphicsContext> context_,
+    ArrayProxy<const Shared<DescriptorSetLayout>> descriptorSets,
     ArrayProxy<vk::PushConstantRange> pushConstants)
-    : GraphicsObject(context),
+    : GraphicsObject(std::move(context_)),
       _descriptorSets(descriptorSets.begin(), descriptorSets.end()) {
-  auto &device = GetGraphicsContext()->GetDevice();
+  auto& device = context()->device();
 
   auto descriptorHandles = ToVulkanType(_descriptorSets);
 
@@ -41,7 +41,7 @@ PipelineLayout::PipelineLayout(
 }
 
 PipelineLayout::~PipelineLayout() {
-  auto &device = GetGraphicsContext()->GetDevice();
+  auto& device = context()->device();
   device.destroy(_pipelineLayout);
 }
 
@@ -50,26 +50,28 @@ PipelineLayout::~PipelineLayout() {
  */
 
 GraphicsPipeline::GraphicsPipeline(
-    GraphicsContext *context, RenderPass *renderPass,
-    PipelineLayout *pipelineLayout, Shader *vertexShader,
-    Shader *fragmentShader, ArrayProxy<VertexInputBinding> vertexBindings,
-    ArrayProxy<VertexInputAttribute> vertexAttributes,
+    Shared<GraphicsContext> context_, Shared<RenderPass> render_pass,
+    Shared<PipelineLayout> layout, Shared<Shader> vertex_shader,
+    Shared<Shader> fragment_shader,
+    ArrayProxy<VertexInputBinding> vertex_bindings,
+    ArrayProxy<VertexInputAttribute> vertex_attributes,
     PrimitiveTopology topology)
-    : GraphicsObject(context), _renderPass(renderPass),
-      _vertexShader(vertexShader), _fragmentShader(fragmentShader),
-      _pipelineLayout(pipelineLayout) {
-
-  auto &device = GetGraphicsContext()->GetDevice();
+    : GraphicsObject(std::move(context_)),
+      _render_pass(std::move(render_pass)),
+      _vertex_shader(std::move(vertex_shader)),
+      _fragment_shader(std::move(fragment_shader)),
+      _pipeline_layout(std::move(layout)) {
+  auto& device = context()->device();
 
   auto shaderStages = std::array<vk::PipelineShaderStageCreateInfo, 2>{
       vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eVertex,
-                                        *_vertexShader, "main"),
+                                        *_vertex_shader, "main"),
       vk::PipelineShaderStageCreateInfo({}, vk::ShaderStageFlagBits::eFragment,
-                                        *_fragmentShader, "main"),
+                                        *_fragment_shader, "main"),
   };
 
   auto inputStateInfo = vk::PipelineVertexInputStateCreateInfo(
-      {}, vertexBindings, vertexAttributes);
+      {}, vertex_bindings, vertex_attributes);
 
   auto inputAssemblyInfo =
       vk::PipelineInputAssemblyStateCreateInfo({}, topology, VK_FALSE);
@@ -110,15 +112,15 @@ GraphicsPipeline::GraphicsPipeline(
   auto pipelineCreateInfo = vk::GraphicsPipelineCreateInfo(
       {}, shaderStages, &inputStateInfo, &inputAssemblyInfo, null,
       &viewportState, &rasterizationState, &multisampleState, null,
-      &colorBlendAttachmentState, &dynamicStateInfo, *_pipelineLayout,
-      *_renderPass, 0);
+      &colorBlendAttachmentState, &dynamicStateInfo, *_pipeline_layout,
+      *_render_pass, 0);
 
   _pipeline = device.createGraphicsPipeline(null, pipelineCreateInfo).value;
 }
 
 GraphicsPipeline::~GraphicsPipeline() {
-  auto &device = GetGraphicsContext()->GetDevice();
+  auto& device = context()->device();
   device.destroy(_pipeline);
 }
 
-} // namespace rndr
+}  // namespace muchcool::rndr

@@ -1,20 +1,19 @@
-// Copyright (c) 2022-2023 Jacob R. Green
+// Copyright (c) 2023 Jacob R. Green
 // All Rights Reserved.
 
-#include "muchcool/rndr/Texture.hpp"
+#include "muchcool/rndr/texture.hpp"
 
-#include "muchcool/rndr/CommandPool.hpp"
+#include "muchcool/rndr/command_pool.hpp"
 
-namespace rndr {
+namespace muchcool::rndr {
 
-Texture::Texture(GraphicsContext *context, uint32 width, uint32 height,
-                 vk::Format format, uintn buffer_size, void *buffer,
+Texture::Texture(Shared<GraphicsContext> context_, uint32 width, uint32 height,
+                 vk::Format format, uword buffer_size, void* buffer,
                  vk::Filter filtering, vk::SamplerAddressMode address_mode,
                  float anisotropy)
-    : GraphicsObject(context) {
-
-  auto &device = GetGraphicsContext()->GetDevice();
-  auto &allocator = context->GetAllocator();
+    : GraphicsObject(std::move(context_)) {
+  auto& device = context()->device();
+  auto& allocator = context()->allocator();
 
   auto image_create_info = vk::ImageCreateInfo(
       {}, vk::ImageType::e2D, format, {width, height, 1}, 1, 1,
@@ -26,8 +25,8 @@ Texture::Texture(GraphicsContext *context, uint32 width, uint32 height,
       VmaAllocationCreateInfo{.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_AUTO};
 
   if (auto result = vmaCreateImage(
-          allocator, &static_cast<const VkImageCreateInfo &>(image_create_info),
-          &allocation_create_info, &reinterpret_cast<VkImage &>(_image),
+          allocator, &static_cast<const VkImageCreateInfo&>(image_create_info),
+          &allocation_create_info, &reinterpret_cast<VkImage&>(_image),
           &_allocation, &_allocationInfo);
       result != VK_SUCCESS) {
     throw;
@@ -45,14 +44,14 @@ Texture::Texture(GraphicsContext *context, uint32 width, uint32 height,
 
   if (auto result = vmaCreateBuffer(
           allocator,
-          &static_cast<const VkBufferCreateInfo &>(staging_buffer_create_info),
+          &static_cast<const VkBufferCreateInfo&>(staging_buffer_create_info),
           &staging_alloc_create_info, &staging_buffer, &staging_allocation,
           &staging_alloc_info);
       result != VK_SUCCESS) {
     throw;
   }
 
-  void *mapped_addr = nullptr;
+  void* mapped_addr = nullptr;
   if (auto result = vmaMapMemory(allocator, staging_allocation, &mapped_addr);
       result != VK_SUCCESS) {
     throw;
@@ -62,10 +61,9 @@ Texture::Texture(GraphicsContext *context, uint32 width, uint32 height,
       memcpy_s(mapped_addr, staging_alloc_info.size, buffer, buffer_size);
 
   vmaUnmapMemory(allocator, staging_allocation);
-  if (copy_error)
-    throw std::exception();
+  if (copy_error) throw std::exception();
 
-  auto command_pool = new CommandPool(context);
+  auto command_pool = new CommandPool(context());
   auto command_buffer = command_pool->AllocateBuffer();
 
   auto begin_info = vk::CommandBufferBeginInfo();
@@ -104,7 +102,7 @@ Texture::Texture(GraphicsContext *context, uint32 width, uint32 height,
 
   command_buffer->operator vk::CommandBuffer().end();
 
-  auto &queue = GetGraphicsContext()->GetQueue();
+  auto& queue = context()->queue();
 
   auto command_buffers = std::array<vk::CommandBuffer, 1>{*command_buffer};
 
@@ -130,10 +128,10 @@ Texture::Texture(GraphicsContext *context, uint32 width, uint32 height,
 }
 
 Texture::~Texture() {
-  auto &device = GetGraphicsContext()->GetDevice();
+  auto& device = context()->device();
   device.destroy(_sampler);
   device.destroy(_view);
   device.destroy(_image);
 }
 
-} // namespace rndr
+}  // namespace muchcool::rndr

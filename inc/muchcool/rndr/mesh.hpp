@@ -1,10 +1,13 @@
 
+// Copyright (c) 2023 Jacob R. Green
+// All Rights Reserved.
+
 #pragma once
 
-#include "Buffer.hpp"
-#include "Platform.hpp"
+#include "buffer.hpp"
+#include "common.hpp"
 
-namespace rndr {
+namespace muchcool::rndr {
 
 using Index16 = uint16;
 using Index32 = uint32;
@@ -12,19 +15,19 @@ using Index32 = uint32;
 class Vertex {};
 
 class Vertex2D : public Vertex {
-public:
+ public:
   glm::vec2 Pos;
 };
 
 class Vertex2DTextured : public Vertex2D {
-public:
+ public:
   glm::vec2 UV;
 };
 
 class BaseMesh : public GraphicsObject {
-public:
-  BaseMesh(uintn vertexSize, uintn vertexCount, void* vertexData,
-           uintn indexSize, uintn indexCount, void* indexData);
+ public:
+  BaseMesh(uword vertexSize, uword vertexCount, void* vertexData,
+           uword indexSize, uword indexCount, void* indexData);
 
   template <typename Vtx, typename Idx>
   BaseMesh(ArrayProxy<Vtx> vertices, ArrayProxy<Vtx> indices)
@@ -32,16 +35,17 @@ public:
                  indices.size(), indices.data()) {}
 };
 
-template <typename Vtx, typename Idx> class Mesh : public GraphicsObject {
-  Pointer<Buffer> _vertexBuffer;
-  Pointer<Buffer> _indexBuffer;
+template <typename Vtx, typename Idx>
+class Mesh : public GraphicsObject {
+  Shared<Buffer> _vertexBuffer;
+  Shared<Buffer> _indexBuffer;
 
-public:
-  Mesh(GraphicsContext* context, ArrayProxy<Vtx> vertices,
+ public:
+  Mesh(Shared<GraphicsContext> context_, ArrayProxy<Vtx> vertices,
        ArrayProxy<Idx> indices)
-      : GraphicsObject(context) {
-    _vertexBuffer = new VertexBuffer(context, sizeof(Vtx) * vertices.size());
-    _indexBuffer = new IndexBuffer(context, sizeof(Idx) * indices.size());
+      : GraphicsObject(std::move(context_)) {
+    _vertexBuffer = new VertexBuffer(context(), sizeof(Vtx) * vertices.size());
+    _indexBuffer = new IndexBuffer(context(), sizeof(Idx) * indices.size());
 
     UpdateVertices(vertices);
     UpdateIndices(indices);
@@ -60,4 +64,4 @@ class Mesh2D : public Mesh<Vertex2D, Index16> {};
 
 class TexturedMesh2D : public Mesh<Vertex2DTextured, Index16> {};
 
-} // namespace Rndr
+}  // namespace muchcool::rndr

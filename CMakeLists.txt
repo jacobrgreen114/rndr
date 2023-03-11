@@ -3,24 +3,24 @@
 
 
 add_library(rndr
-        src/Rndr.cpp
+        src/rndr.cpp
 
-        src/GraphicsContext.cpp
-        src/RenderSurface.cpp
+        src/graphics_context.cpp
+        src/render_surface.cpp
 
         # src/DeviceMemory.cpp
-        src/Buffer.cpp
-        src/Texture.cpp
+        src/buffer.cpp
+        src/texture.cpp
 
-        src/CommandPool.cpp
+        src/command_pool.cpp
 
-        src/Pipeline.cpp
-        src/Shader.cpp
-        src/DescriptorSet.cpp
-        src/Renderable.cpp
-        src/RenderPass.cpp
-        src/Renderer.cpp
-        src/Mesh.cpp
+        src/pipeline.cpp
+        src/shader.cpp
+        src/descriptor_set.cpp
+        src/renderable.cpp
+        src/render_pass.cpp
+        src/renderer.cpp
+        src/mesh.cpp
 )
 
 target_include_directories(rndr

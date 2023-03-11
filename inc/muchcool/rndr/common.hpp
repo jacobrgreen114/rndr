@@ -1,5 +1,5 @@
 
-// Copyright (c) 2022-2023 Jacob R. Green
+// Copyright (c) 2023 Jacob R. Green
 // All Rights Reserved.
 
 #pragma once
@@ -23,8 +23,6 @@
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
 
-template <typename T> using ArrayProxy = vk::ArrayProxy<T>;
-
 // #define GLM_FORCE_AVX2
 // #define GLM_FORCE_RADIANS
 // #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
@@ -34,4 +32,7 @@ template <typename T> using ArrayProxy = vk::ArrayProxy<T>;
 #include <glm/gtx/matrix_transform_2d.hpp>
 #include <glm/gtx/transform.hpp>
 
-namespace rndr {}
+namespace muchcool {
+template <typename T>
+using ArrayProxy = vk::ArrayProxy<T>;
+}

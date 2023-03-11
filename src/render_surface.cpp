@@ -1,25 +1,24 @@
 
-// Copyright (c) 2022-2023 Jacob R. Green
+// Copyright (c) 2023 Jacob R. Green
 // All Rights Reserved.
 
-#include "muchcool/rndr/RenderSurface.hpp"
+#include "muchcool/rndr/render_surface.hpp"
 
-namespace rndr {
+namespace muchcool::rndr {
 
-RenderSurface::RenderSurface(GraphicsContext *graphicsContext,
+RenderSurface::RenderSurface(Shared<GraphicsContext> context_,
                              HWND windowHandle)
-    : GraphicsObject(graphicsContext) {
-
-  auto &instance = GetGraphicsContext()->GetInstance();
-  auto &physicalDevice = GetGraphicsContext()->GetPhysicalDevice();
-  auto &device = GetGraphicsContext()->GetDevice();
+    : GraphicsObject(std::move(context_)) {
+  auto& instance = context()->instance();
+  auto& physicalDevice = context()->physical_device();
+  auto& device = context()->device();
 
   auto surfaceCreateInfo =
       vk::Win32SurfaceCreateInfoKHR({}, GetModuleHandle(null), windowHandle);
   _surface = instance.createWin32SurfaceKHR(surfaceCreateInfo);
 
-  if (!physicalDevice.getSurfaceSupportKHR(
-          GetGraphicsContext()->GetQueueFamilyIndex(), _surface)) {
+  if (!physicalDevice.getSurfaceSupportKHR(context()->queue_family_index(),
+                                           _surface)) {
     throw std::exception("Physical device does not support this surface.");
   }
 
@@ -31,23 +30,22 @@ RenderSurface::RenderSurface(GraphicsContext *graphicsContext,
   auto presentModes = physicalDevice.getSurfacePresentModesKHR(_surface);
   _presentMode = presentModes[0];
 
-  _renderPass =
-      new rndr::RenderPass(GetGraphicsContext(), _surfaceFormat.format);
+  _renderPass = Shared{new RenderPass(context(), _surfaceFormat.format)};
 
   _inFlightFence = device.createFence({});
 
   CreateSwapchain();
 }
 
-Pointer<RenderSurface> RenderSurface::New(GraphicsContext *graphicsContext,
-                                          HWND windowHandle) {
-  return new RenderSurface(graphicsContext, windowHandle);
+Shared<RenderSurface> RenderSurface::New(Shared<GraphicsContext> context_,
+                                         HWND windowHandle) {
+  return Shared{new RenderSurface(std::move(context_), windowHandle)};
 }
 
 void RenderSurface::Destroy() {
-  auto &graphicContext = *GetGraphicsContext();
-  auto &instance = graphicContext.GetInstance();
-  auto &device = graphicContext.GetDevice();
+  auto& graphicContext = *context();
+  auto& instance = graphicContext.instance();
+  auto& device = graphicContext.device();
 
   DestroySwapchain();
   device.destroy(_inFlightFence);
@@ -55,8 +53,7 @@ void RenderSurface::Destroy() {
 }
 
 void RenderSurface::CreateSwapchain() {
-
-  auto &device = GetGraphicsContext()->GetDevice();
+  auto& device = context()->device();
 
   auto swapchainCreateInfo = vk::SwapchainCreateInfoKHR(
       {}, _surface, 3, _surfaceFormat.format, _surfaceFormat.colorSpace,
@@ -71,7 +68,7 @@ void RenderSurface::CreateSwapchain() {
 
   std::transform(_swapchainImages.begin(), _swapchainImages.end(),
                  _swapchainImageViews.begin(),
-                 [this, device](auto &image) -> vk::ImageView {
+                 [this, device](auto& image) -> vk::ImageView {
                    auto createInfo = vk::ImageViewCreateInfo(
                        {}, image, vk::ImageViewType::e2D, _surfaceFormat.format,
                        {},
@@ -84,7 +81,7 @@ void RenderSurface::CreateSwapchain() {
 
   std::transform(_swapchainImageViews.begin(), _swapchainImageViews.end(),
                  _frameBuffers.begin(),
-                 [this, device](auto &view) -> vk::Framebuffer {
+                 [this, device](auto& view) -> vk::Framebuffer {
                    auto createInfo = vk::FramebufferCreateInfo(
                        {}, *_renderPass, view, GetCurrentExtent().width,
                        GetCurrentExtent().height, 1);
@@ -98,14 +95,12 @@ void RenderSurface::CreateSwapchain() {
 }
 
 void RenderSurface::DestroySwapchain() {
-  auto &device = GetGraphicsContext()->GetDevice();
+  auto& device = context()->device();
 
-  for (auto &fb : _frameBuffers)
-    device.destroy(fb);
+  for (auto& fb : _frameBuffers) device.destroy(fb);
   _frameBuffers.clear();
 
-  for (auto &view : _swapchainImageViews)
-    device.destroy(view);
+  for (auto& view : _swapchainImageViews) device.destroy(view);
   _swapchainImageViews.clear();
 
   _swapchainImages.clear();
@@ -123,9 +118,8 @@ void RenderSurface::UpdateSwapchain() {
   auto renderLock = LockRenderMutex();
 
   _surfaceCapabilities =
-      GetGraphicsContext()->GetPhysicalDevice().getSurfaceCapabilitiesKHR(
-          _surface);
+      context()->physical_device().getSurfaceCapabilitiesKHR(_surface);
   RecreateSwapchain();
 }
 
-} // namespace rndr
+}  // namespace muchcool::rndr

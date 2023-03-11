@@ -1,27 +1,26 @@
 
-// Copyright (c) 2022-2023 Jacob R. Green
+// Copyright (c) 2023 Jacob R. Green
 // All Rights Reserved.
 
-#include "muchcool/rndr/GraphicsContext.hpp"
+#include "muchcool/rndr/graphics_context.hpp"
 
 // TODO : Diagnose why upgrading version past 1.0 fixed imageview blending issue
 #define VULKAN_API_VERSION VK_API_VERSION_1_3
 
-namespace rndr {
+namespace muchcool::rndr {
 
 #ifdef NDEBUG
-std::array<const char *, 0> instanceLayers = {};
+std::array<const char*, 0> instanceLayers = {};
 #else
-std::array<const char *, 1> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
+std::array<const char*, 1> instanceLayers = {"VK_LAYER_KHRONOS_validation"};
 #endif
 
-std::array<const char *, 2> instanceExtensions = {
+std::array<const char*, 2> instanceExtensions = {
     VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME};
 
-std::array<const char *, 0> deviceLayers = {};
+std::array<const char*, 0> deviceLayers = {};
 
-std::array<const char *, 1> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+std::array<const char*, 1> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 /*
  * GraphicsContext
@@ -73,13 +72,13 @@ GraphicsContext::~GraphicsContext() noexcept {
   vmaDestroyAllocator(_allocator);
 }
 
-Pointer<GraphicsContext> GraphicsContext::New() {
-  return new GraphicsContext();
+Shared<GraphicsContext> GraphicsContext::create() {
+  return Shared{new GraphicsContext()};
 }
 
-void GraphicsContext::InstantExecute(InstantExecuteCallback &callback) {
+void GraphicsContext::InstantExecute(InstantExecuteCallback& callback) {
   const auto command_pool_create_info = vk::CommandPoolCreateInfo(
-      vk::CommandPoolCreateFlagBits::eTransient, GetQueueFamilyIndex());
+      vk::CommandPoolCreateFlagBits::eTransient, queue_family_index());
 
   const auto command_pool = _device.createCommandPool(command_pool_create_info);
 
@@ -107,10 +106,4 @@ void GraphicsContext::InstantExecute(InstantExecuteCallback &callback) {
  * GraphicsObject
  */
 
-GraphicsObject::GraphicsObject(GraphicsContext *graphics_context)
-    : _graphicsContext(graphics_context) {
-  if (!graphics_context) {
-    throw std::exception("Graphics context can't be null");
-  }
-}
-} // namespace rndr
+}  // namespace muchcool::rndr

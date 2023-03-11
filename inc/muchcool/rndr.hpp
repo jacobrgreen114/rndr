@@ -1,17 +1,17 @@
 
-// Copyright (c) 2022-2023 Jacob R. Green
+// Copyright (c) 2023 Jacob R. Green
 // All Rights Reserved.
 
 #pragma once
 
-#include "rndr/Buffer.hpp"
-#include "rndr/CommandPool.hpp"
-#include "rndr/DataTypes.hpp"
-#include "rndr/DescriptorSet.hpp"
-#include "rndr/GraphicsContext.hpp"
-#include "rndr/Mesh.hpp"
-#include "rndr/Pipeline.hpp"
-#include "rndr/Platform.hpp"
-#include "rndr/RenderSurface.hpp"
-#include "rndr/Shader.hpp"
-#include "rndr/Texture.hpp"
+#include "rndr/buffer.hpp"
+#include "rndr/command_pool.hpp"
+#include "rndr/data_types.hpp"
+#include "rndr/descriptor_set.hpp"
+#include "rndr/graphics_context.hpp"
+#include "rndr/mesh.hpp"
+#include "rndr/pipeline.hpp"
+#include "rndr/common.hpp"
+#include "rndr/render_surface.hpp"
+#include "rndr/shader.hpp"
+#include "rndr/texture.hpp"

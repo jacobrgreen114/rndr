@@ -1,14 +1,15 @@
 
-// Copyright (c) 2022-2023 Jacob R. Green
+// Copyright (c) 2023 Jacob R. Green
 // All Rights Reserved.
 
-#include "muchcool/rndr/RenderPass.hpp"
+#include "muchcool/rndr/render_pass.hpp"
 
-namespace rndr {
+namespace muchcool::rndr {
 
-RenderPass::RenderPass(GraphicsContext *context, vk::Format surfaceFormat)
-    : GraphicsObject(context) {
-  auto &device = GetGraphicsContext()->GetDevice();
+RenderPass::RenderPass(Shared<GraphicsContext> context_,
+                       vk::Format surfaceFormat)
+    : GraphicsObject(std::move(context_)) {
+  auto& device = context()->device();
 
   auto attachmentDescriptions =
       std::array<vk::AttachmentDescription, 1>{vk::AttachmentDescription(
@@ -33,8 +34,8 @@ RenderPass::RenderPass(GraphicsContext *context, vk::Format surfaceFormat)
 }
 
 RenderPass::~RenderPass() {
-  auto &device = GetGraphicsContext()->GetDevice();
+  auto& device = context()->device();
   device.destroy(_renderPass);
 }
 
-} // namespace rndr
+}  // namespace muchcool::rndr
