@@ -58,3 +58,4 @@ target_precompile_headers(rndr
         <glm/gtx/transform.hpp>
 )
 
+install(TARGETS rndr)
